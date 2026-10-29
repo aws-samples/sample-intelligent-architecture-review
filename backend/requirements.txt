@@ -41,7 +41,7 @@ mangum==0.21.0
 # 6.0.3, not 6.0.2: aws-opentelemetry-distro pins pyyaml exactly, and holding
 # 6.0.2 makes the install unresolvable.
 pyyaml==6.0.3
-strands-agents==0.3.0
+strands-agents==1.48.0
 tenacity==9.1.2
 
 # OpenTelemetry auto-instrumentation (ADOT). Supplies the
