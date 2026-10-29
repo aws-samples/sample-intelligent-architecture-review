@@ -229,8 +229,9 @@ pytest                       # backend + infrastructure
 cd frontend && npm test      # frontend (vitest)
 ```
 
-`.gitlab-ci.yml` runs the backend, frontend, Terraform, Checkov policy, and
-dependency-audit checks on every push. All five jobs are hermetic: no AWS
+GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs the
+backend, frontend, Terraform, Checkov policy, and dependency-audit checks on
+every push and pull request. All five jobs are hermetic: no AWS
 credentials, no deployed environment, and no model usage.
 
 End-to-end tests run against a deployed environment and incur model usage

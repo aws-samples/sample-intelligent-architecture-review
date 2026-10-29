@@ -353,7 +353,8 @@ root. The root `pytest.ini` places `backend/` on the Python path, so
 infrastructure tests require no AWS setup or credentials. End-to-end tests are
 deselected by default and opt in with `pytest -m e2e --run-e2e`.
 
-`.gitlab-ci.yml` runs the backend, frontend, Terraform, Checkov policy, and
-`pip-audit` dependency checks on every push. The dependency job gates on zero
+GitHub Actions (`.github/workflows/ci.yml`) runs the backend, frontend,
+Terraform, Checkov policy, and `pip-audit` dependency checks on every push and
+pull request. The dependency job gates on zero
 unaccepted advisories; each ignore is documented inline with the reason it cannot
 be remediated in this tree. See [tests/README.md](../tests/README.md).

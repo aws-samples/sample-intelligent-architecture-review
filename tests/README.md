@@ -29,13 +29,15 @@ pytest --cov=backend/app
 
 ## CI
 
-`.gitlab-ci.yml` runs four jobs on every push and merge request:
+GitHub Actions (`.github/workflows/ci.yml`) runs five jobs on every push to
+`main` and every pull request:
 
 | Job | Runs |
 |---|---|
-| `backend` | `pytest tests/backend tests/infra` on python:3.11-slim (matches `backend/Dockerfile`) |
+| `backend` | `pytest tests/backend tests/infra` on Python 3.11 (matches `backend/Dockerfile`) |
 | `frontend` | `tsc --noEmit`, `eslint`, `vitest run`, then `next build` |
 | `terraform` | `fmt -check -recursive`, `init -backend=false`, `validate` |
+| `dependency-audit` | `pip-audit` on `backend/requirements.txt`, gated on zero unaccepted advisories |
 | `checkov` | Policy scan of `infrastructure/`, gated on zero failures |
 
 ### Coverage gates

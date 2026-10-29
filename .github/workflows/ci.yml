@@ -1,0 +1,158 @@
+# CI: runs on every push to main and on every pull request.
+#
+# Everything here is hermetic: no AWS credentials, no network calls to a
+# deployment, no model spend. The backend suite uses each store's in-memory
+# fallback, and the infra suite parses .tf files as text.
+#
+# Deliberately NOT in CI:
+#   - tests/e2e: needs a live deployment, real Cognito logins and Bedrock calls
+#     that cost money. Opt in locally: pytest -m e2e --run-e2e (see
+#     tests/README.md).
+#   - deploy.sh: deploys stay manual and account-guarded.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend and infra tests (pytest)
+    runs-on: ubuntu-latest
+    env:
+      # The suites must not reach AWS. A region satisfies boto3's client
+      # constructor (some stores build a client at import time) while the
+      # absence of credentials keeps every call failing closed into the
+      # in-memory path.
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_EC2_METADATA_DISABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          # Matches backend/Dockerfile, so a pass means the interpreter the
+          # container runs on.
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r backend/requirements.txt
+      # pytest.ini sets --cov, the coverage gate, and -m "not e2e".
+      - run: python -m pytest tests/backend tests/infra --junitxml=report.xml
+
+  frontend:
+    name: Frontend (typecheck, lint, unit tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      # tsc first: a type error explains a failing build better than next does.
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npx vitest run
+      # The build is a real gate: the static export is what ships to S3.
+      - run: npm run build
+
+  terraform:
+    name: Terraform (format and validate)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+      - run: terraform fmt -check -recursive -diff
+      # -backend=false: validation needs the providers, not the S3 state
+      # bucket, so this stays credential-free.
+      - run: terraform init -backend=false
+      - run: terraform validate
+
+  dependency-audit:
+    name: Dependency audit (pip-audit)
+    # Gates on ZERO unaccepted advisories, the same philosophy as the checkov job:
+    # every ignore below is a deliberate decision with a stated reason, not a way to
+    # make the build green. Re-check the ignores whenever strands-agents or fastapi
+    # move — both exist only because a pinned parent caps the vulnerable child.
+    #
+    #   mcp     PYSEC-2026-1617/3482/3483 — transitive under strands-agents 0.3.0,
+    #           which pins it. No MCP client is used by this application (the code
+    #           that did was removed with the AgentCore gateway), so the affected
+    #           paths are not reachable. Clears on a strands major upgrade.
+    #   starlette PYSEC-2026-161/248/249/2280/2281 — fixes land in starlette 1.x,
+    #           which the pinned FastAPI does not support. Tracked for the FastAPI
+    #           upgrade; the ALB/CloudFront front the app and the affected paths are
+    #           request-parsing edge cases.
+    #   mcp     CVE-2026-59951/116684/116685/116686 — same transitive pin under
+    #           strands-agents 0.3.0 and the same reason: the MCP server, client
+    #           transports and bearer auth are never used.
+    #   strands-agents CVE-2026-115419, GHSA-3w55-933p-8pv5, GHSA-763v-5pjm-fx36 —
+    #           the A2A server and FileSessionManager. Neither is used: agents run
+    #           in-process with no session manager. Fixed only in strands 1.x, a
+    #           major upgrade tracked with the mcp items above.
+    #   opentelemetry-api CVE-2026-114603, opentelemetry-propagator-jaeger
+    #           CVE-2026-116694 — pinned exactly by aws-opentelemetry-distro; even
+    #           its latest release (0.21.0) holds 1.44.0, below the 1.45.x fixes.
+    #           Both parse inbound propagation headers (tracestate, uberctx-*),
+    #           which never reach the app: CloudFront forwards only Authorization,
+    #           Content-Type, Origin and Accept, and the load balancer rejects
+    #           traffic that bypasses CloudFront. The Jaeger propagator is also not
+    #           enabled. Clears on the next distro release that moves to 1.45.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pip-audit
+      - run: |
+          pip-audit -r backend/requirements.txt --progress-spinner off \
+            --ignore-vuln PYSEC-2026-1617 \
+            --ignore-vuln PYSEC-2026-3482 \
+            --ignore-vuln PYSEC-2026-3483 \
+            --ignore-vuln PYSEC-2026-161 \
+            --ignore-vuln PYSEC-2026-248 \
+            --ignore-vuln PYSEC-2026-249 \
+            --ignore-vuln PYSEC-2026-2280 \
+            --ignore-vuln PYSEC-2026-2281 \
+            --ignore-vuln CVE-2026-59951 \
+            --ignore-vuln CVE-2026-116684 \
+            --ignore-vuln CVE-2026-116685 \
+            --ignore-vuln CVE-2026-116686 \
+            --ignore-vuln CVE-2026-115419 \
+            --ignore-vuln GHSA-3w55-933p-8pv5 \
+            --ignore-vuln GHSA-763v-5pjm-fx36 \
+            --ignore-vuln CVE-2026-114603 \
+            --ignore-vuln CVE-2026-116694
+
+  checkov:
+    name: Infrastructure policy scan (checkov)
+    # Terraform has no line-coverage metric, so "infra coverage" means policy
+    # coverage. The gate is zero failures: every check that does not apply is
+    # skipped with a stated reason in infrastructure/.checkov.yml, so a new
+    # failure is either a real regression or a decision someone has to write
+    # down.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: checkov
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo bridgecrew/checkov:3.3.8 \
+            -d infrastructure --config-file infrastructure/.checkov.yml --output cli
