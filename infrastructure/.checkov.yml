@@ -1,0 +1,98 @@
+# Checkov policy scanning for the Terraform in this directory.
+#
+# Run locally exactly as CI does:
+#   checkov -d infrastructure --config-file infrastructure/.checkov.yml
+#
+# CI gates on ZERO failures, so every skip below is a deliberate decision with a
+# stated reason. Do not add a skip to make the build green — either fix the
+# finding or record why the check does not apply here. Checkov's own severity
+# ratings need a Prisma Cloud API key, which this repo does not have, so
+# "gate on HIGH/CRITICAL" is not available; the gate is instead "no unjustified
+# failures", which is stricter.
+#
+# Two themes cover most skips:
+#   * KMS CMK-vs-AWS-managed encryption for logs and public assets.
+#     Application data (DynamoDB, ECR, SNS, the SecureString parameter) uses
+#     the customer-managed key in modules/kms; the rest is still encrypted at
+#     rest, with AWS-managed keys.
+#   * Controls that need a second environment or a paid feature to be
+#     meaningful (cross-region replication, WAF, dedicated log-archive bucket).
+
+directory:
+  - .
+
+# Keep the summary machine-readable in CI and human-readable locally.
+compact: true
+quiet: true
+
+skip-check:
+  # --- Encryption: AWS-managed keys where a CMK adds nothing ---
+  # DynamoDB, ECR, SNS and the SecureString parameter use the customer-managed
+  # key in modules/kms. These remaining stores hold logs or public assets.
+  - CKV_AWS_158  # CloudWatch Logs: encrypted with the service-managed key.
+  - CKV_AWS_145  # S3 frontend and CloudFront access logs: SSE-S3, not SSE-KMS.
+                 # CloudFront standard logging cannot deliver to an SSE-KMS
+                 # bucket, and the frontend bucket holds the public site.
+  - CKV2_AWS_65  # ACLs stay enabled on the CloudFront access-log bucket only:
+                 # standard logging delivers through an ACL grant to the
+                 # log-delivery account. Public access is fully blocked.
+
+  # --- CloudTrail ---
+  - CKV_AWS_35   # Trail objects use SSE-S3 rather than a KMS CMK, consistent
+                 # with the other buckets here. Log file validation IS enabled,
+                 # which is what detects tampering.
+  - CKV_AWS_252  # No SNS topic on the trail itself. Delivery notification is a
+                 # separate concern from alerting, and the alarms in
+                 # modules/monitoring already publish to an SNS topic.
+
+  # --- SSM parameters that are deliberately plaintext ---
+  # These hold PUBLIC identifiers the frontend needs at build time: user-pool
+  # id, client id, hosted-UI domain, discovery URL, SAML provider name. The
+  # only actual secret, cognito/client-secret, IS a SecureString (main.tf:321).
+  - CKV2_AWS_34
+
+  # --- Needs infrastructure this deployment intentionally does not have ---
+  - CKV_AWS_144  # S3 cross-region replication: single-region dev deployment.
+  - CKV_AWS_18   # S3 access logging: needs a separate log-archive bucket.
+  - CKV2_AWS_61  # S3 lifecycle: documents are retained deliberately.
+  - CKV2_AWS_62  # S3 event notifications: the pipeline is API-driven, not
+                 # bucket-event-driven.
+  - CKV_AWS_21   # Versioning on the FRONTEND bucket only — it is rebuilt from
+                 # source on every deploy. The documents bucket IS versioned.
+  - CKV_AWS_91   # ALB access logs: needs a log-archive bucket (see CKV_AWS_18).
+  - CKV2_AWS_11  # VPC flow logs: cost/volume not justified for dev.
+  - CKV_AWS_310  # CloudFront origin failover: single-origin-per-path by design.
+
+  # --- WAF: not provisioned (cost); the ALB bypass is closed by the
+  # X-Origin-Verify listener rule instead. See docs and modules/ecs/main.tf. ---
+  - CKV2_AWS_28
+  - CKV_AWS_68
+  - CKV2_AWS_47
+
+  # --- CloudFront TLS/behaviour choices tied to the default certificate ---
+  - CKV2_AWS_42  # Custom SSL cert: dev uses the default *.cloudfront.net cert
+                 # (cloudfront_acm_certificate_arn = ""), which also pins
+                 # minimum_protocol_version to TLSv1 on AWS's side.
+  - CKV_AWS_374  # Geo restriction: the app is not geo-scoped.
+  - CKV2_AWS_32  # Response headers policy: not yet defined.
+
+  # --- Deliberate architecture decisions, documented at the resource ---
+  - CKV_AWS_51   # ECR immutable tags: deploy.sh republishes :latest each
+                 # deploy, so immutability would break deployment.
+  - CKV_AWS_378  # Target group uses HTTP to the container INSIDE the VPC;
+                 # public traffic is HTTPS via CloudFront.
+  - CKV_AWS_356  # IAM "*" resource is scoped to bedrock:ListFoundationModels
+                 # and GetFoundationModel, which do not accept a resource ARN.
+                 # Every other statement is ARN-scoped (modules/bedrock).
+  - CKV_AWS_382  # Unrestricted EGRESS. Tasks must reach Bedrock, S3, DynamoDB
+                 # and ECR; locking egress needs VPC endpoints for each.
+  - CKV_AWS_23   # Security-group rule descriptions: rules are documented in
+                 # comments above each block instead.
+  - CKV2_AWS_12  # Default VPC security group: not used by any resource here.
+
+  # --- Lambda: the pre-token hook is a stdlib-only, no-I/O function ---
+  - CKV_AWS_50   # X-Ray tracing: no downstream calls to trace.
+  - CKV_AWS_117  # VPC placement: it calls nothing inside the VPC.
+  - CKV_AWS_116  # DLQ: Cognito invokes it synchronously during login.
+  - CKV_AWS_115  # Reserved concurrency: scales with the login path.
+  - CKV_AWS_272  # Code signing: the artifact is built from this repo.

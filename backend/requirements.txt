@@ -1,0 +1,71 @@
+# Pinned to the tested versions (was >= ranges) for reproducible builds and
+# supply-chain safety — an unpinned `pip install` could pull an untested or
+# compromised newer release into the deployed image. Bump deliberately.
+# fastapi 0.121.0 is the first release whose starlette ceiling (<0.50.0) admits
+# the patched starlette 0.49.2 below. Earlier fastapi (through 0.120.x) capped
+# starlette at <0.49.0, which is why this pair was held back previously.
+fastapi==0.121.0
+# Pin starlette explicitly so `pip install` is reproducible (unpinned, a fresh
+# resolve could pull an untested release). >=0.49.1 patches GHSA-7f5h-v6xp-fcq8
+# (O(n^2) Range-header DoS in starlette.responses.FileResponse); pinned to
+# 0.49.2, which sits inside fastapi 0.121.0's supported range.
+starlette==0.49.2
+uvicorn[standard]==0.32.1
+boto3==1.42.89
+pymupdf==1.26.7
+# Pillow: lazy image-header read for the icon-upload decompression-bomb guard
+# (reject an oversized canvas before fitz decodes it). Already present
+# transitively (pdfplumber, reportlab, …); pinned explicitly since we import it.
+# >=12.1.1 patched GHSA-cfh3-3jmp-rvhc (OOB write decoding a PSD); 13.0.0
+# clears the next batch of image-decoder advisories (39 against 12.3.0).
+# Reachable here — icon_legend Image.open() runs on attacker-supplied bytes, so
+# the format is not ours to trust.
+pillow==13.0.0
+# Downloadable validation report (PDF export). Pure-Python, no system libs
+# (unlike weasyprint which needs pango/cairo) — safe in the slim container.
+reportlab==4.2.5
+pydantic==2.10.3
+pydantic-settings==2.5.2
+# 0.0.31 patches PYSEC-2026-3036/3037/3040. This parses MULTIPART UPLOADS —
+# the most directly attacker-reachable code in the service — so it is the one
+# dependency to keep current above all others.
+python-multipart==0.0.31
+httpx==0.28.1
+# Native .pptx parsing: slide-type classification plus native text and table
+# extraction. Pure Python — the LibreOffice-heavy conversion happens in the
+# pptx-converter sidecar, not here.
+python-pptx==1.0.2
+# 1.2.2 patches PYSEC-2026-2270.
+python-dotenv==1.2.2
+mangum==0.21.0
+# 6.0.3, not 6.0.2: aws-opentelemetry-distro pins pyyaml exactly, and holding
+# 6.0.2 makes the install unresolvable.
+pyyaml==6.0.3
+strands-agents==0.3.0
+tenacity==9.1.2
+
+# OpenTelemetry auto-instrumentation (ADOT). Supplies the
+# `opentelemetry-instrument` wrapper the Dockerfile CMD runs under, which traces
+# FastAPI requests and boto3 calls (Bedrock, DynamoDB, S3) with no application
+# code changes — this is what makes extraction, validation and query traceable
+# end to end. Spans go to X-Ray and, via infrastructure/modules/tracing, into
+# the CloudWatch `aws/spans` index.
+#
+# opentelemetry-instrumentation-threading is pinned alongside it because the
+# distro does NOT constrain it: pip otherwise resolves the newest release, which
+# demands a different opentelemetry-instrumentation version than the distro
+# pins, leaving an incoherent set that `pip check` flags.
+aws-opentelemetry-distro==0.16.0
+opentelemetry-instrumentation-threading==0.61b0
+# Verifies Cognito ID tokens in app/api/auth.py (RS256 against the pool's
+# JWKS). Replaces python-jose, which kept accruing advisories with no fixed
+# release (CVE-2026-85394, plus pyasn1 and ecdsa beneath it); the switch removes
+# all three from the dependency tree.
+PyJWT[crypto]==2.15.1
+
+# Testing
+pytest==9.1.0
+pytest-asyncio==1.4.0
+pytest-cov==4.1.0
+pytest-mock==3.15.1
+moto==5.0.0

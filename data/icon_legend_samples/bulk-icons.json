@@ -1,0 +1,113 @@
+{
+  "icons": [
+    {
+      "label": "ACB-01",
+      "icon_type": "server",
+      "description": "Tier-1 application node running the core banking monolith",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-01.png"
+    },
+    {
+      "label": "ACB-02",
+      "icon_type": "database",
+      "description": "Synchronously replicated core banking database cluster",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-02.png"
+    },
+    {
+      "label": "ACB-03",
+      "icon_type": "load_balancer",
+      "description": "Hardware traffic director pair in active-passive mode",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-03.png"
+    },
+    {
+      "label": "ACB-04",
+      "icon_type": "datacenter",
+      "description": "Owned on-premises datacenter site",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-04.png"
+    },
+    {
+      "label": "ACB-05",
+      "icon_type": "network",
+      "description": "PCI-segmented network zone boundary",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-05.png"
+    },
+    {
+      "label": "ACB-06",
+      "icon_type": "storage",
+      "description": "Fibre-channel SAN storage array",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-06.png"
+    },
+    {
+      "label": "ACB-07",
+      "icon_type": "other",
+      "description": "Hardware security module holding payment signing keys",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-07.png"
+    },
+    {
+      "label": "ACB-08",
+      "icon_type": "firewall",
+      "description": "Perimeter firewall enforcing the zone policy",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-08.png"
+    },
+    {
+      "label": "ACB-09",
+      "icon_type": "gateway",
+      "description": "Internal API gateway fronting the service estate",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-09.png"
+    },
+    {
+      "label": "ACB-10",
+      "icon_type": "service",
+      "description": "Shared platform service consumed by multiple applications",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-10.png"
+    },
+    {
+      "label": "ACB-11",
+      "icon_type": "other",
+      "description": "Unclassified component placeholder (ambiguous by design)",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-11.png"
+    },
+    {
+      "label": "ACB-12",
+      "icon_type": "server",
+      "description": "Tier-2 application node (same outline as ACB-01, different fill)",
+      "hosting_scope": "on_prem",
+      "image_filename": "acb-12.png"
+    },
+    {
+      "label": "ACB-13",
+      "icon_type": "mainframe",
+      "description": "Type is not in the enum.",
+      "hosting_scope": "on_prem"
+    },
+    {
+      "label": "",
+      "icon_type": "server",
+      "description": "Label is empty.",
+      "hosting_scope": "on_prem"
+    },
+    {
+      "label": "   ",
+      "icon_type": "database",
+      "description": "Label is whitespace only.",
+      "hosting_scope": "on_prem"
+    },
+    {
+      "label": "ACB-14",
+      "icon_type": "network",
+      "description": "Unrecognized hosting_scope, still accepted.",
+      "hosting_scope": "mars",
+      "image_filename": "acb-99-missing.png"
+    }
+  ]
+}

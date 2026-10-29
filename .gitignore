@@ -1,0 +1,80 @@
+# ---- OS / editor ----
+.DS_Store
+.idea/
+*.swp
+
+# ---- Secrets & local env ----
+.env
+.env.*
+!.env.example
+frontend/.env.local
+
+# ---- Local agent/tooling state (never part of the deliverable) ----
+.omc/
+**/.omc/
+
+# Agent tooling rules (fetched per-release, not versioned here)
+.aidlc
+
+# Agent working artifacts (state, audit log, working docs). Local-only: a record
+# of how the work was done, not part of the deliverable. The bare `.aidlc` rule
+# above does NOT cover this — it matches only that exact name, so the
+# trailing-slash pattern is required.
+.aidlc-docs/
+
+# Local-only agent context
+CLAUDE.md
+
+# Tool-specific agent directories. Contributors use different coding tools, so
+# no single tool's config belongs in the repo. The shared, tool-agnostic guides
+# live in skills/ and AGENTS.md instead.
+.claude/
+.cursor/
+.github/copilot-instructions.md
+
+# Security-scan working artifacts (Probe/semgrep/grype exports). Local-only —
+# raw scanner dumps are a point-in-time record, not part of the shipped source.
+.security/
+
+# ---- Python (backend) ----
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+coverage/
+.venv/
+venv/
+
+# ---- Node / Next.js (frontend) ----
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# ---- Terraform ----
+.terraform/
+# Provider lock file: kept out of version control for this repo. NOTE that
+# HashiCorp's own guidance is to COMMIT it — doing so pins provider versions and
+# their hashes so every machine and CI run resolves an identical set. Excluded
+# here by choice; the trade-off is that `terraform init` re-resolves providers
+# per environment, so a provider release can change behaviour between runs
+# without a diff to review. Pin versions in providers.tf to bound that.
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+# Real per-target tfvars are account-specific; only examples are tracked.
+infrastructure/tfvars/*.tfvars
+!infrastructure/tfvars/*.example.tfvars
+infrastructure/backend-config/*.s3.tfbackend
+!infrastructure/backend-config/*.example.s3.tfbackend
+# Terraform plan files are local artifacts.
+*.tfplan
+
+# Local project briefs / customer context — never commit
+.context/
+.worktrees/

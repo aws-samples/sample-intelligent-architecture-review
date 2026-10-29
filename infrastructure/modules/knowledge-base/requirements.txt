@@ -1,0 +1,7 @@
+# Dependencies for the KB index bootstrap (create_index.py), run by the
+# null_resource.kb_index_bootstrap local-exec provisioner during
+# `terraform apply`. Install on the deploy host before applying:
+#     pip install -r infrastructure/modules/knowledge-base/requirements.txt
+# deploy.sh does this itself, into infrastructure/modules/knowledge-base/.venv.
+opensearch-py==3.2.0
+boto3>=1.34.0

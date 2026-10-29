@@ -1,0 +1,16 @@
+# Example S3 backend config — copy to <your-target>.s3.tfbackend and edit.
+#
+#   cp backend-config/dev.example.s3.tfbackend backend-config/dev.s3.tfbackend
+#   terraform init -backend-config=backend-config/dev.s3.tfbackend
+#
+# deploy.sh derives + creates these automatically; you only need this file
+# for direct `terraform init`. Real *.s3.tfbackend files are gitignored.
+#
+# Isolation rules:
+#   same account, different env  -> same bucket, different `key`
+#   different account            -> different `bucket` (lives in that account)
+
+bucket  = "resilience-review-dev-tfstate-<ACCOUNT_ID>"
+key     = "dev/terraform.tfstate"
+region  = "us-east-1"
+encrypt = true

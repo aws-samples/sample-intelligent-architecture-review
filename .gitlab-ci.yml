@@ -1,0 +1,185 @@
+###############################################################################
+# CI — runs on every push and merge request.
+#
+# Everything here is hermetic: no AWS credentials, no network calls to a
+# deployment, no model spend. The backend suite uses each store's in-memory
+# fallback, and the infra suite parses .tf files as text (no terraform binary
+# and no provider downloads for the tests themselves).
+#
+# Deliberately NOT in CI:
+#   - tests/e2e — needs a live deployment, real Cognito logins and Bedrock
+#     calls that cost money. Opt in locally: pytest -m e2e --run-e2e
+#     (see tests/README.md).
+#   - deploy.sh — deploys stay manual and account-guarded.
+###############################################################################
+
+stages:
+  - test
+
+default:
+  interruptible: true
+
+###############################################################################
+# Backend + infra (pytest)
+###############################################################################
+
+backend:
+  stage: test
+  # Matches backend/Dockerfile so a CI pass means the same interpreter the
+  # container runs on.
+  image: public.ecr.aws/docker/library/python:3.11-slim
+  cache:
+    key:
+      files:
+        - backend/requirements.txt
+    paths:
+      - .cache/pip
+  variables:
+    PIP_CACHE_DIR: $CI_PROJECT_DIR/.cache/pip
+    # The suites must not reach AWS. A bogus region satisfies boto3's client
+    # constructor (some stores build a client at import time) while the absence
+    # of credentials keeps every call failing closed into the in-memory path.
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_EC2_METADATA_DISABLED: "true"
+  before_script:
+    - pip install --quiet --upgrade pip
+    # pytest + asyncio/cov/mock plugins are pinned in requirements.txt, so CI
+    # runs the same versions as a local checkout — nothing extra to install.
+    - pip install --quiet -r backend/requirements.txt
+  script:
+    # pytest.ini already sets --cov, the 30% gate, and -m "not e2e".
+    - python -m pytest tests/backend tests/infra --junitxml=report.xml
+  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+(?:\.\d+)?)%/'
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+###############################################################################
+# Frontend (typecheck, lint, unit tests, production build)
+###############################################################################
+
+frontend:
+  stage: test
+  image: public.ecr.aws/docker/library/node:22
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+    paths:
+      - frontend/.npm
+  before_script:
+    - cd frontend
+    - npm ci --cache .npm --prefer-offline
+  script:
+    # tsc first: a type error explains a failing build better than next does.
+    - npx tsc --noEmit
+    - npm run lint
+    - npx vitest run
+    # The build is a real gate — static export is what actually ships to S3.
+    - npm run build
+
+###############################################################################
+# Terraform (formatting + validity)
+###############################################################################
+
+terraform:
+  stage: test
+  image:
+    name: hashicorp/terraform:1.10
+    entrypoint: [""]
+  script:
+    - cd infrastructure
+    - terraform fmt -check -recursive -diff
+    # -backend=false: validation needs the providers, not the S3 state bucket,
+    # so this stays credential-free.
+    - terraform init -backend=false
+    - terraform validate
+
+###############################################################################
+# Dependency vulnerability scanning (pip-audit)
+#
+# Gates on ZERO unaccepted advisories, the same philosophy as the checkov job:
+# every ignore below is a deliberate decision with a stated reason, not a way to
+# make the build green. Re-check the ignores whenever strands-agents or fastapi
+# move — both exist only because a pinned parent caps the vulnerable child.
+#
+#   mcp     PYSEC-2026-1617/3482/3483 — transitive under strands-agents 0.3.0,
+#           which pins it. No MCP client is used by this application (the code
+#           that did was removed with the AgentCore gateway), so the affected
+#           paths are not reachable. Clears on a strands major upgrade.
+#   starlette PYSEC-2026-161/248/249/2280/2281 — fixes land in starlette 1.x,
+#           which the pinned FastAPI does not support. Tracked for the FastAPI
+#           upgrade; the ALB/CloudFront front the app and the affected paths are
+#           request-parsing edge cases.
+#   mcp     CVE-2026-59951/116684/116685/116686 — same transitive pin under
+#           strands-agents 0.3.0 and the same reason: the MCP server, client
+#           transports and bearer auth are never used.
+#   strands-agents CVE-2026-115419, GHSA-3w55-933p-8pv5, GHSA-763v-5pjm-fx36 —
+#           the A2A server and FileSessionManager. Neither is used: agents run
+#           in-process with no session manager. Fixed only in strands 1.x, a
+#           major upgrade tracked with the mcp items above.
+#   opentelemetry-api CVE-2026-114603, opentelemetry-propagator-jaeger
+#           CVE-2026-116694 — pinned exactly by aws-opentelemetry-distro; even
+#           its latest release (0.21.0) holds 1.44.0, below the 1.45.x fixes.
+#           Both parse inbound propagation headers (tracestate, uberctx-*),
+#           which never reach the app: CloudFront forwards only Authorization,
+#           Content-Type, Origin and Accept, and the load balancer rejects
+#           traffic that bypasses CloudFront. The Jaeger propagator is also not
+#           enabled. Clears on the next distro release that moves to 1.45.
+###############################################################################
+
+dependency-audit:
+  stage: test
+  image: public.ecr.aws/docker/library/python:3.11-slim
+  before_script:
+    - pip install --quiet --upgrade pip
+    - pip install --quiet pip-audit
+  script:
+    - pip-audit -r backend/requirements.txt --progress-spinner off
+        --ignore-vuln PYSEC-2026-1617
+        --ignore-vuln PYSEC-2026-3482
+        --ignore-vuln PYSEC-2026-3483
+        --ignore-vuln PYSEC-2026-161
+        --ignore-vuln PYSEC-2026-248
+        --ignore-vuln PYSEC-2026-249
+        --ignore-vuln PYSEC-2026-2280
+        --ignore-vuln PYSEC-2026-2281
+        --ignore-vuln CVE-2026-59951
+        --ignore-vuln CVE-2026-116684
+        --ignore-vuln CVE-2026-116685
+        --ignore-vuln CVE-2026-116686
+        --ignore-vuln CVE-2026-115419
+        --ignore-vuln GHSA-3w55-933p-8pv5
+        --ignore-vuln GHSA-763v-5pjm-fx36
+        --ignore-vuln CVE-2026-114603
+        --ignore-vuln CVE-2026-116694
+
+###############################################################################
+# Infrastructure policy scanning (checkov)
+###############################################################################
+# Terraform has no line-coverage metric, so "infra coverage" here means policy
+# coverage: how many security/best-practice checks the HCL satisfies.
+#
+# The gate is ZERO failures, not a percentage. Every check that does not apply
+# to this deployment is skipped WITH A STATED REASON in
+# infrastructure/.checkov.yml — so a new failure is always either a real
+# regression or a decision someone has to write down. (Checkov's own severity
+# ratings need a paid Prisma Cloud key, which is why the gate is not
+# "HIGH/CRITICAL only".)
+
+checkov:
+  stage: test
+  image:
+    name: bridgecrew/checkov:3.3.8
+    entrypoint: [""]
+  script:
+    - checkov -d infrastructure --config-file infrastructure/.checkov.yml
+        --output cli --output junitxml --output-file-path console,checkov.xml
+  artifacts:
+    when: always
+    reports:
+      junit: checkov.xml

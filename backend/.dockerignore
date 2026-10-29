@@ -1,0 +1,19 @@
+# Keep the runtime image to just the application code. Anything that is only
+# needed to develop, test, or measure the service is excluded so it can't bloat
+# the image or ship into production.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+venv/
+.omc/
+
+# Tests live in the repo-root /tests tree, not in the image.
+tests/
+
+# Docs are served from the repo, not the container.
+README.md

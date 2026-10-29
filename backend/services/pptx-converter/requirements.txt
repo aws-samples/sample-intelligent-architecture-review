@@ -1,0 +1,11 @@
+# Pinned for reproducible sidecar image builds (was >= ranges). Aligned with
+# the backend's pinned versions where they overlap. Bump deliberately.
+fastapi==0.121.0
+# Pin starlette to the patched version explicitly: fastapi pulls it transitively,
+# so without this pin the sidecar image could ship the vulnerable 0.41.x.
+# >=0.49.1 patches GHSA-7f5h-v6xp-fcq8 (Range-header DoS in FileResponse).
+starlette==0.49.2
+uvicorn[standard]==0.32.1
+httpx==0.28.1
+pydantic==2.10.3
+PyMuPDF==1.26.7

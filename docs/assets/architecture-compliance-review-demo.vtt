@@ -1,0 +1,383 @@
+WEBVTT
+
+00:00:01.201 --> 00:00:03.761
+Every enterprise has architecture standards.
+
+00:00:04.241 --> 00:00:07.601
+Very few can check every design against them.
+
+00:00:07.801 --> 00:00:12.481
+This is Architecture Compliance Review: an AI-assisted workspace that
+
+00:00:12.721 --> 00:00:15.761
+reviews system designs against your own standards,
+
+00:00:15.841 --> 00:00:19.681
+for the systems you run in the cloud and in your own datacenters.
+
+00:00:20.483 --> 00:00:25.070
+Design reviews are where resilience and security are won or lost.
+
+00:00:25.096 --> 00:00:28.030
+But the standards live in long policy documents,
+
+00:00:28.056 --> 00:00:31.963
+the designs arrive as hundred-page PDFs and slide decks,
+
+00:00:32.003 --> 00:00:34.683
+and every review is done by hand.
+
+00:00:34.723 --> 00:00:39.283
+It takes weeks, and two reviewers rarely reach the same verdict.
+
+00:00:40.559 --> 00:00:45.399
+Cloud providers now offer self-service checks against their own frameworks.
+
+00:00:45.439 --> 00:00:47.919
+But enterprise estates are hybrid.
+
+00:00:47.999 --> 00:00:52.959
+On-premises systems, internal standards, and house diagram notations sit
+
+00:00:53.039 --> 00:00:58.799
+outside those tools, and that is where many of the most critical systems still run.
+
+00:01:00.040 --> 00:01:04.600
+Architecture Compliance Review closes that gap in four steps.
+
+00:01:04.720 --> 00:01:08.320
+Turn your policy documents into a governed rule library.
+
+00:01:08.360 --> 00:01:11.120
+Teach it your own diagram notation.
+
+00:01:11.160 --> 00:01:15.640
+Upload a design, from the cloud or from your own datacenter.
+
+00:01:15.720 --> 00:01:20.640
+Then validate it, with every verdict cited back to the page it came from.
+
+00:01:20.680 --> 00:01:23.480
+People stay in control at every step.
+
+00:01:24.803 --> 00:01:27.803
+Teams sign in with their corporate identity.
+
+00:01:27.843 --> 00:01:32.643
+With single sign-on through SAML, directory groups map straight to roles
+
+00:01:32.723 --> 00:01:34.163
+in the workspace.
+
+00:01:34.884 --> 00:01:39.484
+The dashboard is the portfolio view: how many designs pass,
+
+00:01:39.524 --> 00:01:43.524
+where the critical risk sits, and a priority queue of the reviews that
+
+00:01:43.604 --> 00:01:45.444
+need attention first.
+
+00:01:46.167 --> 00:01:48.167
+Access is role-based.
+
+00:01:48.247 --> 00:01:50.487
+Admins manage the workspace.
+
+00:01:50.567 --> 00:01:53.087
+Curators own the rule library.
+
+00:01:53.127 --> 00:01:56.087
+Validators submit and review designs.
+
+00:01:56.167 --> 00:01:58.767
+Viewers can read and ask questions.
+
+00:01:58.807 --> 00:02:04.487
+And every change to rules, documents and validations is written to an audit trail.
+
+00:02:05.209 --> 00:02:08.489
+Step one: turn policy into rules.
+
+00:02:09.891 --> 00:02:13.531
+A curator uploads a standards document: here,
+
+00:02:13.571 --> 00:02:17.371
+AnyCompany Bank's standard for on-premises infrastructure.
+
+00:02:17.411 --> 00:02:20.104
+They tell the extractor what it is looking at:
+
+00:02:20.158 --> 00:02:23.451
+the tiers it covers, that its rules sit in tables,
+
+00:02:23.491 --> 00:02:27.331
+and that some rules are alternatives or exceptions to others.
+
+00:02:28.212 --> 00:02:33.452
+Extraction runs in the background, and every step streams to a live log:
+
+00:02:33.492 --> 00:02:38.892
+each page read, each rule found, and each decision the agent makes.
+
+00:02:38.932 --> 00:02:40.932
+Nothing is a black box.
+
+00:02:47.655 --> 00:02:51.415
+Extracted rules are proposals, not policy.
+
+00:02:51.495 --> 00:02:55.015
+Each one carries the exact quote and page it came from,
+
+00:02:55.095 --> 00:02:59.095
+so a curator can check it against the source in a single click.
+
+00:02:59.898 --> 00:03:03.658
+Full-screen review puts the document beside the rules.
+
+00:03:03.738 --> 00:03:07.058
+The extractor also captured how the rules relate:
+
+00:03:07.098 --> 00:03:10.898
+a founding requirement, a substitution that can satisfy it,
+
+00:03:10.938 --> 00:03:14.298
+and an exception that waives it for a lower tier.
+
+00:03:16.864 --> 00:03:20.584
+When the curator is satisfied, they approve the batch.
+
+00:03:20.624 --> 00:03:24.384
+Only approved rules are ever used in a validation.
+
+00:03:26.607 --> 00:03:31.167
+The library now holds both standards, filterable by hosting scope,
+
+00:03:31.247 --> 00:03:34.007
+tier, layer and rule type.
+
+00:03:34.047 --> 00:03:38.567
+Founding rules carry their alternatives and exceptions as a decision tree,
+
+00:03:38.607 --> 00:03:43.007
+which the validator applies before it ever calls a requirement failed.
+
+00:03:43.730 --> 00:03:47.930
+References hold the context a reviewer needs but cannot test,
+
+00:03:47.970 --> 00:03:51.210
+such as tier definitions and regulatory mappings.
+
+00:03:51.250 --> 00:03:53.970
+They travel with the rules they relate to.
+
+00:03:54.692 --> 00:03:58.452
+And Curate with AI scans the library for gaps,
+
+00:03:58.532 --> 00:04:03.092
+proposing new rules or edits for a curator to accept or reject.
+
+00:04:03.895 --> 00:04:06.935
+Each proposal explains the gap it would close,
+
+00:04:07.015 --> 00:04:10.335
+and nothing changes until a curator decides.
+
+00:04:10.375 --> 00:04:14.895
+This one fills a real gap, so it is approved into the library.
+
+00:04:14.935 --> 00:04:18.375
+This one is not needed, so it is rejected.
+
+00:04:21.098 --> 00:04:24.218
+Step two: teach it your notation.
+
+00:04:25.619 --> 00:04:30.899
+On-premises diagrams are drawn in an organization's own vocabulary.
+
+00:04:30.979 --> 00:04:35.699
+At AnyCompany Bank, an orange hexagon is a core banking node,
+
+00:04:35.779 --> 00:04:38.939
+a purple pentagon is a payment-signing module,
+
+00:04:38.979 --> 00:04:42.619
+and a page-shaped symbol is a datacenter site.
+
+00:04:42.659 --> 00:04:47.299
+A model reading the drawing cold sees only shapes, and guesses.
+
+00:04:48.021 --> 00:04:51.101
+So the curator loads the bank's notation table,
+
+00:04:51.141 --> 00:04:55.261
+one row per symbol, then attaches the symbol images.
+
+00:04:55.301 --> 00:04:59.701
+The AI pairs each image with its row, and checks the picture against the
+
+00:04:59.861 --> 00:05:00.981
+written meaning.
+
+00:05:02.205 --> 00:05:05.485
+Anything it doubts is flagged before approval.
+
+00:05:05.565 --> 00:05:11.045
+Here it questions whether a page-shaped symbol can really mean a datacenter site.
+
+00:05:11.085 --> 00:05:15.045
+In this notation it does, so the curator keeps it.
+
+00:05:15.085 --> 00:05:19.805
+An ambiguous placeholder, and a test row with no image, are rejected.
+
+00:05:20.526 --> 00:05:22.526
+The rest are approved.
+
+00:05:22.686 --> 00:05:27.646
+Only approved symbols are ever used when the validator reads a diagram.
+
+00:05:30.951 --> 00:05:36.391
+Step three: bring a design, from your own datacenter or the cloud.
+
+00:05:37.793 --> 00:05:42.006
+A validator uploads the design for the Retail Payments Platform,
+
+00:05:42.060 --> 00:05:45.593
+a Tier 1 system running in two owned datacenters,
+
+00:05:45.633 --> 00:05:48.553
+and sets its hosting scope to on-premises,
+
+00:05:48.593 --> 00:05:52.513
+so only the rules that apply to owned infrastructure are used.
+
+00:05:56.237 --> 00:05:59.837
+Within seconds the design is parsed into sections,
+
+00:06:00.157 --> 00:06:04.317
+recognized as Tier 1 from its own text, and both diagrams,
+
+00:06:04.437 --> 00:06:08.477
+drawn in the bank's notation, are extracted for visual analysis.
+
+00:06:10.282 --> 00:06:13.802
+Step four: validate, with evidence.
+
+00:06:15.204 --> 00:06:18.124
+A validator can run every applicable rule,
+
+00:06:18.164 --> 00:06:22.684
+pick rules by hand, or describe the review in plain language.
+
+00:06:22.724 --> 00:06:26.684
+Here they ask for site resilience across both datacenters,
+
+00:06:26.724 --> 00:06:31.524
+perimeter firewalls, payment-signing modules and failover testing.
+
+00:06:33.048 --> 00:06:37.528
+The AI picks the twenty library rules most relevant to that brief,
+
+00:06:37.608 --> 00:06:42.048
+from both standards, and can propose new rules for this run alone.
+
+00:06:42.088 --> 00:06:45.608
+A curator can save any of them to the library later.
+
+00:06:48.333 --> 00:06:53.933
+A verdict in minutes, not weeks: twenty-one percent and not compliant,
+
+00:06:54.013 --> 00:06:58.053
+with seventeen failures, four passes, and one warning.
+
+00:06:58.093 --> 00:07:02.413
+It caught what the text admits, such as quarterly failover tests where
+
+00:07:02.493 --> 00:07:06.733
+Tier 1 needs them monthly, and a twenty-two minute recovery against a
+
+00:07:06.773 --> 00:07:08.493
+fifteen minute target.
+
+00:07:09.215 --> 00:07:12.415
+And this is where the icon legend pays off.
+
+00:07:12.495 --> 00:07:15.255
+Reading the drawing in the bank's own notation,
+
+00:07:15.295 --> 00:07:19.575
+the validator found a single perimeter firewall serving both sites,
+
+00:07:19.615 --> 00:07:24.535
+where each site needs its own, a gap that appears only in the drawing.
+
+00:07:24.575 --> 00:07:28.148
+It also confirmed one payment-signing module per site,
+
+00:07:28.202 --> 00:07:30.095
+where a pair is required.
+
+00:07:30.817 --> 00:07:35.697
+Every finding quotes its evidence, cites the page, and recommends a fix.
+
+00:07:36.500 --> 00:07:40.180
+The full model trace is one click away, with the reasoning,
+
+00:07:40.220 --> 00:07:45.620
+the prompt and the response, for anyone who needs to audit how a verdict was reached.
+
+00:07:46.422 --> 00:07:50.022
+And a reviewer can question any finding directly.
+
+00:08:04.570 --> 00:08:09.930
+Results export to PDF and CSV for the architecture review board.
+
+00:08:12.734 --> 00:08:17.774
+Across the whole portfolio, anyone can ask questions in plain language.
+
+00:08:17.854 --> 00:08:22.654
+Answers are grounded in the documents, and every claim cites its source.
+
+00:08:24.294 --> 00:08:27.574
+Every passage it reads is labelled with its source,
+
+00:08:27.654 --> 00:08:30.774
+so the answer quotes this design's own risk table,
+
+00:08:30.854 --> 00:08:35.334
+on page two, and maps each risk to the standard it breaches.
+
+00:08:38.136 --> 00:08:44.056
+It all runs in your own AWS account: ECS Fargate behind CloudFront,
+
+00:08:44.136 --> 00:08:48.616
+Amazon Bedrock for every model call, a Bedrock guardrail that redacts
+
+00:08:48.696 --> 00:08:52.189
+sensitive data, customer-managed encryption,
+
+00:08:52.323 --> 00:08:55.136
+CloudTrail alongside an application audit trail,
+
+00:08:55.176 --> 00:08:57.056
+and end-to-end tracing.
+
+00:08:57.096 --> 00:08:59.736
+Your documents never leave your account.
+
+00:09:00.966 --> 00:09:04.966
+The result: consistent reviews against your own standards,
+
+00:09:05.046 --> 00:09:09.606
+for cloud and on-premises systems alike, with people in control and
+
+00:09:09.686 --> 00:09:12.086
+evidence behind every decision.
+
+00:09:13.311 --> 00:09:15.631
+Architecture Compliance Review.
+
+00:09:15.711 --> 00:09:18.991
+Open source, and ready to deploy in your account.
+
